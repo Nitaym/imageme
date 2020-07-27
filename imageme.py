@@ -27,7 +27,7 @@ except ImportError:
         'https://github.com/python-pillow/Pillow) to enable support.'
     )
 
-SERVER_VERSION = '1.0.1'
+SERVER_VERSION = '1.0.2'
 
 THUMBS_DIR_NAME = 'imageme_thumbs'
 
