@@ -333,7 +333,7 @@ def _get_server_port():
     @return {Integer} The port to run the server on. Default 8000, overridden
         by first command line argument.
     """
-    return int(sys.argv[1]) if len(sys.argv) >= 2 else 8000
+    return int(sys.argv[1]) if len(sys.argv) >= 2 else 9090
 
 def _get_src_from_image(img, fallback_image_file):
     """
