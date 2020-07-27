@@ -151,8 +151,8 @@ def _create_index_file(
         )
         html += [
             '    <td>',
-            '    <a href="' + link_target + '">',
-            '        <img class="image" src="' + img_src + '">',
+            '    <a href="' + link_target + '">' + link_target + '<br>',
+            '        <img class="image" width="10%" height="20%" src="' + img_src + '">',
             '    </a>',
             '    </td>'
         ]
