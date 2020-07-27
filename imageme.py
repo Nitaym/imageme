@@ -11,7 +11,7 @@ what's called.
 """
 
 # Dependencies
-import base64, io, os, re, sys, threading, http.server, socketserver
+import base64, io, os, re, sys, threading, http.server, socketserver, pathlib, shutil
 # Attempt to import PIL - if it doesn't exist we won't be able to make use of
 # some performance enhancing goodness, but imageMe will still work fine
 PIL_ENABLED = False
@@ -27,13 +27,17 @@ except ImportError:
         'https://github.com/python-pillow/Pillow) to enable support.'
     )
 
+SERVER_VERSION = '1.0.1'
+
+THUMBS_DIR_NAME = 'imageme_thumbs'
+
 # Constants / configuration
 ## Filename of the generated index files
 INDEX_FILE_NAME = 'imageme.html'
 ## Regex for matching only image files
 IMAGE_FILE_REGEX = '^.+\.(png|jpg|jpeg|tif|tiff|gif|bmp)$'
 ## Images per row of the gallery tables
-IMAGES_PER_ROW = 3
+IMAGES_PER_ROW = 5
 ## Resampling mode to use when thumbnailing
 RESAMPLE = None if not PIL_ENABLED else Image.NEAREST
 ## Width in pixels of thumnbails generated with PIL
@@ -67,7 +71,16 @@ def _clean_up(paths):
     # Iterate over the given paths, unlinking them
     for path in paths:
         print('Removing %s' % path)
-        os.unlink(path)
+        if os.path.exists(path):
+            try:
+                os.unlink(path)
+            except Exception as e1:
+                try:
+                    shutil.rmtree(path)
+                except Exception as e2:
+                    print("WARNING: Cannot remove %s (%s | %s)" % (path, str(e1), str(e2)))
+
+            
 
 def _create_index_file(
         root_dir, location, image_files, dirs, force_no_processing=False):
@@ -139,13 +152,16 @@ def _create_index_file(
     # Counter to cycle down through table rows
     table_row_count = 1
     html += ['<hr>', '<table>']
+    
+    files_created = []
     # For each image file, potentially create a new <tr> and create a new <td>
     for image_file in image_files:
         if table_row_count == 1:
             html.append('<tr>')
-        img_src = _get_thumbnail_src_from_file(
+        img_src, temp_files_created = _get_thumbnail_src_from_file(
             location, image_file, force_no_processing
         )
+        files_created += temp_files_created
         link_target = _get_image_link_target_from_file(
             location, image_file, force_no_processing
         )
@@ -173,7 +189,9 @@ def _create_index_file(
     index_file.write('\n'.join(html))
     index_file.close()
     # Return the path for cleaning up later
-    return index_file_path
+
+    files_created.append(index_file_path)
+    return files_created
 
 def _create_index_files(root_dir, force_no_processing=False):
     """
@@ -200,13 +218,12 @@ def _create_index_files(root_dir, force_no_processing=False):
         image_files = [f for f in files if re.match(IMAGE_FILE_REGEX, f)]
         # Sort the image files by name
         image_files = sorted(image_files)
+        
         # Create this directory's index file and add its name to the created
-        # files list
-        created_files.append(
-            _create_index_file(
-                root_dir, here, image_files, dirs, force_no_processing
-            )
-        )
+        # files list. Note that _create_index_file might create files on it's own
+        files_created_by_this_run = _create_index_file(root_dir, here, image_files, dirs, force_no_processing)
+        files_created_by_this_run.append(os.path.join(here, THUMBS_DIR_NAME))
+        created_files += files_created_by_this_run
     # Return the list of created files
     return created_files
 
@@ -367,6 +384,12 @@ def _get_thumbnail_image_from_file(dir_path, image_file):
     """
     # Get image
     img = _get_image_from_file(dir_path, image_file)
+
+    thumbs_dir = os.path.join(dir_path, THUMBS_DIR_NAME)
+    thumb_filename = os.path.join(thumbs_dir, image_file + '.thumb.png')
+    if os.path.exists(thumb_filename):
+        return thumb_filename
+
     # If it's not supported, exit now
     if img is None:
         return None
@@ -389,9 +412,7 @@ def _get_thumbnail_image_from_file(dir_path, image_file):
         return None
 
     try:
-        thumbs_dir = os.path.join(dir_path, 'thumbs')
         os.makedirs(thumbs_dir, exist_ok=True)
-        thumb_filename = os.path.join(thumbs_dir, image_file + '.thumb.png')
         img.save(thumb_filename)
 
         return thumb_filename
@@ -422,9 +443,12 @@ def _get_thumbnail_src_from_file(dir_path, image_file, force_no_processing=False
     if force_no_processing:
         if image_file.endswith('tif') or image_file.endswith('tiff'):
             return UNSUPPORTED_IMAGE_TYPE_DATA
-        return image_file
+        return image_file, []
     # First try to get a thumbnail image
-    return _get_thumbnail_image_from_file(dir_path, image_file)
+    thumbnail_filename = _get_thumbnail_image_from_file(dir_path, image_file)
+
+    # Return the filename of the thumbnal, and a list containing the temp files created (which is only the thumbnail)
+    return os.path.relpath(thumbnail_filename, dir_path), [thumbnail_filename]
     # return _get_src_from_image(img, image_file)
 
 def _run_server():
@@ -488,6 +512,8 @@ def serve_dir(dir_path):
         background_indexer = BackgroundIndexFileGenerator(dir_path)
         background_indexer.run()
     # Run the server in the current location - this blocks until it's stopped
+
+    print("Server version %s running" % SERVER_VERSION)
     _run_server()
     # Clean up the index files created earlier so we don't make a mess of
     # the image directories
