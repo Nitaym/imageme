@@ -111,7 +111,7 @@ def _create_index_file(
         '                padding-left: 4em;',
         '                padding-right: 4em;',
         '            }',
-        '            .image {max-width: 100%; border-radius: 0.3em;}',
+        '            .image { max-width: 100%; border-radius: 0.3em; width=10%}',
         '            td {width: ' + str(100.0 / IMAGES_PER_ROW) + '%;}',
         '        </style>',
         '    </head>',
@@ -152,7 +152,7 @@ def _create_index_file(
         html += [
             '    <td>',
             '    <a href="' + link_target + '">' + link_target + '<br>',
-            '        <img class="image" width="10%" height="20%" src="' + img_src + '">',
+            '        <img class="image" src="' + img_src + '">',
             '    </a>',
             '    </td>'
         ]
@@ -387,6 +387,17 @@ def _get_thumbnail_image_from_file(dir_path, image_file):
             dir_path, image_file, exptn
         ))
         return None
+
+    try:
+        thumbs_dir = os.path.join(dir_path, 'thumbs')
+        os.makedirs(thumbs_dir, exist_ok=True)
+        thumb_filename = os.path.join(thumbs_dir, image_file + '.thumb.png')
+        img.save(thumb_filename)
+
+        return thumb_filename
+    except:
+        print('WARNING: Error saving thumbnail')
+        return None
     # Return the resized image
     return img
 
@@ -413,8 +424,8 @@ def _get_thumbnail_src_from_file(dir_path, image_file, force_no_processing=False
             return UNSUPPORTED_IMAGE_TYPE_DATA
         return image_file
     # First try to get a thumbnail image
-    img = _get_thumbnail_image_from_file(dir_path, image_file)
-    return _get_src_from_image(img, image_file)
+    return _get_thumbnail_image_from_file(dir_path, image_file)
+    # return _get_src_from_image(img, image_file)
 
 def _run_server():
     """
