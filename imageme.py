@@ -471,6 +471,9 @@ def _run_server():
         ('', port),
         http.server.SimpleHTTPRequestHandler
     )
+
+    print("Server version %s running on port %d" % (SERVER_VERSION, port))
+
     # Print out before actually running the server (cheeky / optimistic, however
     # you want to look at it)
     print('Your images are at http://127.0.0.1:%d/%s' % (
@@ -514,7 +517,6 @@ def serve_dir(dir_path):
         background_indexer.run()
     # Run the server in the current location - this blocks until it's stopped
 
-    print("Server version %s running" % SERVER_VERSION)
     _run_server()
     # Clean up the index files created earlier so we don't make a mess of
     # the image directories
