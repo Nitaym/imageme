@@ -414,6 +414,7 @@ def _get_thumbnail_image_from_file(dir_path, image_file):
     try:
         os.makedirs(thumbs_dir, exist_ok=True)
         img.save(thumb_filename)
+        print('Created thumbnail for %s' % os.path.join(dir_path, image_file))
 
         return thumb_filename
     except:
