@@ -1,8 +1,8 @@
 # [imageMe](http://www.imageme.xyz/)
 
-imageMe is a super simple image gallery server.
+imageMe is a super simple image gallery server. Now updated for Python3!
 
-Think `python -m SimpleHTTPServer` for pictures.
+Think `python -m http.server` for pictures.
 
 ![](http://www.imageme.xyz/images/screenshots/image_index.png)
 
@@ -11,8 +11,9 @@ Think `python -m SimpleHTTPServer` for pictures.
 To run the image server on port 8000:
 
 ```bash
-curl https://cdn.rawgit.com/unwitting/imageme/master/imageme.py | python
+curl -L https://github.com/Nitaym/imageme/raw/master/imageme.py | python
 ```
+Now simply log onto `http://127.0.0.1:8000` and select `imageme.html`
 
 ## Manual Usage
 
@@ -23,13 +24,13 @@ Get hold of a copy of `imageme.py`. For _really_ easy use put it in your `PATH`.
 You could clone this repo:
 
 ```bash
-> git clone https://github.com/unwitting/imageme.git
+> git clone https://github.com/Nitaym/imageme.git
 ```
 
 Or just grab the file directly:
 
 ```bash
-> wget https://cdn.rawgit.com/unwitting/imageme/master/imageme.py
+> curl -L https://github.com/Nitaym/imageme/raw/master/imageme.py -o imagepy.py
 ```
 
 ### Step 2: Run imageMe
@@ -52,10 +53,10 @@ Creating index file ./super_secret_stay_out/imageme.html
 Your images are at http://127.0.0.1:8000/imageme.html
 ```
 
-You can specify a port, just like you can with `SimpleHTTPServer`:
+You can specify a port, just like you can with `http.server`:
 
 ```bash
-> imageme.py 5678
+> python3 imageme.py 5678
 Processing .
 ...
 Your images are at http://127.0.0.1:5678/imageme.html
@@ -64,3 +65,5 @@ Your images are at http://127.0.0.1:5678/imageme.html
 ## Browse and Enjoy
 
 Hit the URL imageMe tells you in your browser, and have fun exploring.
+
+**Important Note**: The gallery is hosted under imageme.html
